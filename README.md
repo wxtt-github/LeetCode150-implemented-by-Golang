@@ -690,7 +690,61 @@ func setZeroes(matrix [][]int) {
 5. 生命游戏
 
 ```go
-
+func gameOfLife(board [][]int)  {
+    /*思路：首先得写一个countCell函数，用于计算周围8个方向的活细胞数，
+    为了实现这个函数，可以定义两个方向数组dx和dy，以向下和向右为正，
+    定义8个方向,需要注意最后计算数目时要&1，目的是取到最后一位数字（当前状态）。
+    我们以1代表细胞活，0代表细胞死，为了原地实现算法，我们不能即时更新
+    01的变化，而要借助其他数字2和3。我们以[下一状态，当前状态]的格式定义。
+    00：死到死
+    01：生到死
+    10：死到生
+    11：生到生
+    这样定义有一个好处，我们先假意更新成2和3，最后再整体更新一次，借助
+    右移运算，我们发现能正好保留高位数字，也就是更新成下一状态。
+    因此总体思路是先遍历一遍，更新成0,1,2,3的数字（其实只需要关注2,3，
+    因为原先就是01,01不变也不影响，目的是把01变为23），
+    然后再遍历一遍，进行右移运算即可。
+    */
+    if len(board) == 0{
+        return
+    }
+    rows := len(board)
+    columns := len(board[0])
+    for i := 0;i < rows;i++{
+        for j := 0;j < columns;j++{
+            cnt := countCell(board,i,j)
+            if board[i][j] == 0 && cnt == 3{
+                board[i][j] = 2
+            }else if board[i][j] == 1 && (cnt == 2 || cnt == 3){
+                board[i][j] = 3
+            }
+        }
+    }
+    for i := 0;i < rows;i++{
+        for j:= 0;j < columns;j++{
+            board[i][j]>>=1
+        }
+    }
+}
+func countCell(board [][]int,x,y int) int{
+    dx := [8]int{0,0,-1,1,1,1,-1,-1}
+    dy := [8]int{-1,1,0,0,-1,1,-1,1}
+    //上，下，左，右，东北，东南，西北，西南
+    rows := len(board)
+    columns := len(board[0])
+    cellNumber := 0
+    for i := 0;i < 8;i++{
+        cx := x+dx[i]
+        cy := y+dy[i]
+        if cx<0 || cx>=rows || cy<0 || cy >=columns{
+            continue
+        }else{
+            cellNumber+=board[cx][cy]&1
+        }
+    }
+    return cellNumber
+}
 ```
 
 #### 哈希表
