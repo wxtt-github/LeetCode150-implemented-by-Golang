@@ -1,6 +1,6 @@
 [题单:Leetcode150题](https://leetcode.cn/studyplan/top-interview-150/)
 
-#### 数组/字符串
+### 数组/字符串
 
 1. 合并两个有序数组
 
@@ -136,7 +136,7 @@ func majorityElement(nums []int) int {
 }
 ```
 
-#### 双指针
+### 双指针
 
 1. 验证回文串
 
@@ -313,7 +313,7 @@ func threeSum(nums []int) [][]int {
 }
 ```
 
-#### 滑动窗口
+### 滑动窗口
 
 1. 长度最小的子数组
 
@@ -519,7 +519,7 @@ func minWindow(s string, t string) string {
 }
 ```
 
-#### 矩阵
+### 矩阵
 
 1. 有效的数独
 
@@ -747,24 +747,107 @@ func countCell(board [][]int,x,y int) int{
 }
 ```
 
-#### 哈希表
+### 哈希表
 
 1. 赎金信
 
 ```go
-
+func canConstruct(ransomNote string, magazine string) bool {
+    /*思路：定义一个哈希表m，遍历magazine，对其键值对自增，
+    然后遍历ransomNote，将其键值对自减，若减为0，则删除
+    时间复杂度：O(m+n)
+    空间复杂度：O(1)，因为哈希表最多存26个字母（根据题目要求）
+    */
+    m := map[byte]int{}
+    for i := 0;i < len(magazine);i++{
+        m[magazine[i]]++
+    }
+    for i := 0;i < len(ransomNote);i++{
+        _,found := m[ransomNote[i]]
+        if found{
+            m[ransomNote[i]]--
+            if m[ransomNote[i]] == 0{
+                delete(m,ransomNote[i])
+            }
+        }else{
+            return false
+        }
+    }
+    return true
+}
 ```
 
 2. 同构字符串
 
 ```go
+func isIsomorphic(s string, t string) bool {
+    /*思路：创建一个哈希表m1，类型map[byte]byte，同时遍历s和t，
+    s为key，t为值，每次现在哈希表中寻找，若寻找失败则新建键值对，
+    若寻找成功则用t去匹配map[s]，若不匹配则返回false。
+    但是这样会遇到一个问题，如badc映射到baba是错误的，1个哈希表
+    只能维护单向映射，而无法完成一对一关系，因此需要两个哈希表。
+    时间复杂度：O(n)
+    空间复杂度：O(1)，因为7位ASCII码最多也就128个字符
+    */
+    m1 := map[byte]byte{}
+    m2 := map[byte]byte{}
+    for i := 0;i < len(s);i++{
+        val1,found1 := m1[s[i]]
+        val2,found2 := m2[t[i]]
+        if found1{
+            if val1 != t[i]{
+                return false
+            }
+        }else{
+            m1[s[i]] = t[i]
+        }
 
+        if found2{
+            if val2 != s[i]{
+                return false
+            }
+        }else{
+            m2[t[i]] = s[i]
+        }
+    }
+    return true
+}
 ```
 
 3. 单词规律
 
 ```go
-
+func wordPattern(pattern string, s string) bool {
+    /*思路：和上一题字符映射差不多，建立两个哈希表维护一对一关系即可，
+    难点是将s进行字符串分割，通过words := strings.Split(s," ")，
+    即可得到一个以空格进行分割的字符串切片。注意在判断m2时，判断不为空
+    是用>0来判断，而不是!=''，这是因为byte的默认值为0，可以自己输出一下验证。
+    此外提供了map的三种声明方式，需注意用var
+    声明时必须用make创建。
+    时间复杂度：O(n)
+    空间复杂度：O(1)。因为对于pattern来说，最多就128种字符
+    */
+    words := strings.Split(s," ")
+    if len(words) != len(pattern){
+        return false
+    }
+    var m1 map[byte]string = make(map[byte]string)
+    var m2 map[string]byte = make(map[string]byte)
+    // m1 := map[byte]string{}
+    // m2 := map[string]byte{}
+    // m1 := make(map[byte]string)
+    // m2 := make(map[string]byte)
+    for i := 0;i < len(pattern);i++{
+        ch := pattern[i]
+        word := words[i]
+        if (m1[ch] != "" && m1[ch] != word) || (m2[word] > 0 && m2[word] != ch){
+            return false
+        }
+        m1[ch] = word
+        m2[word] = ch
+    }
+    return true
+}
 ```
 
 4. 有效的字母异位词
@@ -803,7 +886,7 @@ func countCell(board [][]int,x,y int) int{
 
 ```
 
-#### 区间
+### 区间
 
 1. 汇总区间
 
@@ -824,6 +907,76 @@ func countCell(board [][]int,x,y int) int{
 ```
 
 4. 用最少数量的箭引爆气球
+
+```go
+
+```
+
+### 栈
+
+1. 有效的括号
+
+```go
+
+```
+
+2. 简化路径
+
+```go
+
+```
+
+3. 最小栈
+
+```go
+
+```
+
+4. 逆波兰表达式求值
+
+```go
+
+```
+
+5. 基本计算器
+
+```go
+
+```
+
+### 链表
+
+1. 环形链表
+
+```go
+
+```
+
+2. 两数相加
+
+```go
+
+```
+
+3. 合并两个有序链表
+
+```go
+
+```
+
+4. 随机链表的复制
+
+```go
+
+```
+
+5. 反转链表II
+
+```go
+
+```
+
+6. K个一组反转链表
 
 ```go
 
