@@ -853,37 +853,233 @@ func wordPattern(pattern string, s string) bool {
 4. 有效的字母异位词
 
 ```go
-
+func isAnagram(s string, t string) bool {
+    /*思路：建立一个哈希表m，对s遍历，然后再对t遍历，
+    若查找失败直接返回false，若查找成功则进行自减
+    时间复杂度：O(n)
+    空间复杂度：O(1)
+    */
+    m := make(map[byte]int)
+    if len(s) != len(t){
+        return false
+    }
+    for i := 0;i < len(s);i++{
+        m[s[i]]++
+    }
+    for i := 0;i < len(t);i++{
+        _,found := m[t[i]]
+        if found{
+            m[t[i]]--
+            if m[t[i]] == 0{
+                delete(m,t[i])
+            }
+        }else{
+            return false
+        }
+    }
+    return true
+}
 ```
 
 5. 字母异位词分组
 
 ```go
-
+func groupAnagrams(strs []string) [][]string {
+    /*思路：判断两词是否是字母异位词很简单，本题难点是如何
+    同时对多个词处理，并把它们组合到一起。可以定义一个哈希表，
+    m := map[[26]int][]string{}。其中key是[26]int，
+    通过这个数组我们可以唯一确定一种字母异位词，val是[]string类型，
+    一个字符串数组。我们遍历strs中的每一个字符串，计算它们各自的[26]int，
+    然后把相同key的字符串加入到字符串数组中，即可完成。
+    注意：用[26]int来唯一标记时，访问下标要进行-'a'操作，变为0-25的数字
+    时间复杂度：O(n(k+Σ))，n是strs中字符串的数量，k是单个字符串最大长度，Σ是字符集长度
+    空间复杂度：O(n(k+Σ))
+    */
+    m := map[[26]int][]string{}
+    arr := [][]string{}
+    for _,str := range strs{
+        cnt := [26]int{}
+        for _,ch := range str{
+            cnt[ch-'a']++
+        }
+        m[cnt] = append(m[cnt],str)
+    }
+    for _,val := range m{
+        arr = append(arr,val)
+    }
+    return arr
+}
 ```
 
 6. 两数之和
 
 ```go
+func twoSum(nums []int, target int) []int {
+    /*思路：有两种方法，一种是暴力枚举法，一种是哈希表法。
+    法一：两个for循环暴力枚举
+    时间复杂度：O(n^2)
+    空间复杂度：O(1)
+    法二：建立一个哈希表m，类型map[int]int，key为值，val为下标，
+    遍历nums中每一个元素时，首先先在哈希表中寻找map[target-num]，
+    若找到则直接返回，若找不到则将其加入哈希表中
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    更推荐的是第二种方法，注释掉的是第一种方法
+    */
+    m := map[int]int{}
+    for i,val := range nums{
+        if j,found := m[target-val];found{
+            return []int{i,j}
+        }else{
+            m[val] = i
+        }
+    }
+    return []int{}
 
+
+    // for i := 0;i < len(nums)-1;i++{
+    //     for j := i+1;j < len(nums);j++{
+    //         if nums[i]+nums[j] == target{
+    //             return []int{i,j}
+    //         }
+    //     }
+    // }
+    // return []int{}
+    // //法一
+}
 ```
 
 7. 快乐数
 
 ```go
+func isHappy(n int) bool {
+    /*思路：首先要写一个计算各位平方和的函数，这个不难，
+    定义sum=0，当n>0时，每次取最后一位，计算平方加进sum中，
+    重复循环即可。
+    对于一个具体的数，它可能是快乐数，也可能不是快乐数。
+    若是快乐数，那它总有一天会变为1，如先变为100，再变为1。
+    若不是快乐数，那它最终一定会陷入一个循环，为什么不是趋向于
+    无穷大呢？如对于999会变为243，对于9999会变为324，这说明
+    对于一个很大的高位数来说，他会先降维到3位数，3位数又会降维
+    成243及以下的数，而这是一个有限的集合，说明他最终一定会陷入循环。
+    法一：哈希表法，可以定义一个哈希表，记录n的变化路径，若n变为1或者n变为
+    哈希表曾经出现过的数，说明其陷入了循环，跳出，判断n==1即可。
+    时间复杂度：O(logn)
+    空间复杂度：O(logn)
+    法二：快慢双指针法，定义快慢双指针fast和slow，如果一个数是快乐数，
+    那么fast肯定最先变为1，若不是快乐数，那这两个指针会在某一个循环的
+    数相遇
+    时间复杂度：O(logn)
+    空间复杂度：O(1)
+    从极致的角度看，更推荐法二，但法一也不错了，注释掉的是法一
+    */
+    slow,fast := n,cal(n)
+    for fast != 1 && slow != fast{
+        fast = cal(cal(fast))
+        slow = cal(slow)
+    }
+    return fast == 1
+    // 法二
 
+
+    // m := map[int]bool{}
+    // for n != 1 && !m[n]{
+    //     m[n] = true
+    //     n = cal(n)
+    // }
+    // return n == 1
+    // //法一
+}
+func cal(n int)int{
+    sum := 0
+    for n > 0{
+        sum += (n%10) * (n%10)
+        n/=10
+    }
+    return sum
+}
 ```
 
 8. 存在重复元素II
 
 ```go
-
+func containsNearbyDuplicate(nums []int, k int) bool {
+    /*思路：首先先实现一个求绝对值距离的函数(或者顺便判断小于等于k)，
+    然后创建一个哈希表，遍历nums，若查找成功，则计算其距离并进行更新
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    m := map[int]int{}
+    if len(nums) < 2{
+        return false
+    }
+    for i,num := range nums{
+        val,found := m[num]
+        if found && absDistance(val,i) <= k{
+            return true
+        }else{
+            m[num] = i
+        }
+    }
+    return false
+}
+func absDistance(x,y int)int{
+    temp := x - y
+    if temp > 0{
+        return temp
+    }else{
+        return -temp
+    }
+}
 ```
 
 9. 最长连续序列
 
 ```go
-
+func longestConsecutive(nums []int) int {
+    /*思路：题目要求O(n)时间复杂度，意味着只能遍历常数次nums，
+    且不能用sort.Ints(nums)来排序。
+    首先定义一个哈希表m，遍历一遍nums，目的是去重。然后，重新
+    遍历nums，每遍历一个num元素，首先查找m[num-1]是否存在，
+    若存在说明它不是连续序列的开始元素，我们将其跳过。
+    若不存在说明它是一个连续序列的开始元素（尽管这个序列长度可能为1）。
+    在得知它是开始元素后，就好办了，依次查找m[num+1]，m[num+2]，
+    直到查找失败，得出这个连续序列的长度，再与已有的最大长度进行比较即可。
+    时间复杂度：O(n)。虽然有两个for，但是可以假想有一个长度为n的连续序列，
+    当找到开始元素时，第二个for只需遍历剩下n-1个元素，而对于第一个for，
+    这n-1个元素直接会跳过第二个for，因此是O(n)
+    空间复杂度：O(n)
+    */
+    if len(nums) == 0{
+        return 0
+    }
+    m := make(map[int]bool)
+    maxLength := 0
+    for _,val := range nums{
+        m[val] = true
+    }
+    for key := range m{
+        if found := m[key-1];!found{
+            currentLength := 1
+            temp := key+1
+            ok := m[temp]
+            for ok{
+                currentLength++
+                temp++
+                ok = m[temp]
+            }
+            maxLength = max(maxLength,currentLength)
+        }
+    }
+    return maxLength
+}
+func max(x,y int)int{
+    if x < y{
+        return y
+    }else{
+        return x
+    }
+}
 ```
 
 ### 区间
