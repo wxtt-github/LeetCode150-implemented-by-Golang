@@ -11,6 +11,9 @@
 - [区间](#区间)
 - [栈](#栈)
 - [链表](#链表)
+- [二叉树](#二叉树)
+- [二叉树层次遍历](#二叉树层次遍历)
+- [二叉搜索树](#二叉搜索树)
 
 ### 数组/字符串
 
@@ -1302,31 +1305,243 @@ func findMinArrowShots(points [][]int) int {
 1. 有效的括号
 
 ```go
-
+func isValid(s string) bool {
+    /*思路：用栈来解决括号匹配，go里没有原生的栈，需要自己定义。
+    定义成一个数组即可，然后遍历s，遇到左括号压栈，遇到右括号
+    进行出栈匹配，最后查看栈中是否有残余元素即可。
+    注：在用range遍历string时，val要进行强制类型转换，经我测试，
+    val的默认类型是uint8
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    stack := []byte{}
+    for _,val := range s{
+        ch := byte(val)
+        if ch == '(' || ch == '[' || ch == '{'{
+            stack = append(stack,ch)
+        }else{
+            if len(stack) == 0{
+                return false
+            }
+            top := stack[len(stack)-1]
+            if ch == ')' && top == '(' || ch == ']' && top == '[' || ch == '}' && top == '{'{
+                stack = stack[:len(stack)-1]
+            }else{
+                return false
+            }
+        }
+    }
+    return len(stack)==0
+}
 ```
 
 2. 简化路径
 
 ```go
+// import path2 "path"
+// //用法一时取消注释
+// //因为库名和变量名重名了，做点别名处理
+func simplifyPath(path string) string {
+    /*思路：
+    法一：利用标准库，path.Clean(s string) string{}
+    法二：用栈来处理，首先将path用/进行分割，然后对该数组进行遍历，
+    如果遇到".."，那么进行弹栈，如果遇到既不是""又不是"."，则进行压
+    栈，最后再将该数组用"/"来连接，开头再加上"/"。关键是懂得调用
+    strings.Split(s string,"/"){}和strings.Join(arr []string,"/"){}
+    这两个函数
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    stack := []string{}
+    arr := strings.Split(path,"/")
+    for _,val := range arr{
+        if val == ".."{
+            if len(stack) > 0{
+                stack = stack[:len(stack)-1]
+            }
+        }else if val != "" && val != "." && val != ".."{
+            stack = append(stack,val)
+        }
+    }
+    return "/"+strings.Join(stack,"/")
+    //法二
 
+
+    // return path2.Clean(path)
+    // //法一
+}
 ```
 
 3. 最小栈
 
 ```go
+/*思路：本题一方面要懂得如何构建go的类和方法，二要解决在O(1)时间
+        得到栈中最小元素的问题。在定义MinStack时，可以用一个数组
+        来初始化栈，用另一个数组模拟栈记录栈的最小元素，我们每次压栈，
+        同时也把当前最小值压入最小元素栈，这样检索最小元素时，只需要
+        查看最小元素栈的栈顶即可，还要注意在pop时，也要同时pop最小元素栈
+        时间复杂度：O(1)。对于这里的所有操作。
+        空间复杂度：O(n)
+*/
+type MinStack struct {
+    stack []int
+    minStack []int
+}
 
+func Constructor() MinStack {
+    return MinStack{
+        stack: []int{},
+        minStack: []int{math.MaxInt64},
+    }
+}
+
+func (this *MinStack) Push(val int)  {
+    this.stack = append(this.stack,val)
+    minStackTop := this.minStack[len(this.minStack)-1]
+    this.minStack = append(this.minStack,min(val,minStackTop))
+}
+
+
+func (this *MinStack) Pop()  {
+    this.stack = this.stack[:len(this.stack)-1]
+    this.minStack = this.minStack[:len(this.minStack)-1]
+}
+
+
+func (this *MinStack) Top() int {
+    return this.stack[len(this.stack)-1]
+}
+
+
+func (this *MinStack) GetMin() int {
+    return this.minStack[len(this.minStack)-1]
+}
+
+func min(x,y int) int{
+    if x < y{
+        return x
+    }else{
+        return y
+    }
+}
+
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * obj := Constructor();
+ * obj.Push(val);
+ * obj.Pop();
+ * param_3 := obj.Top();
+ * param_4 := obj.GetMin();
+ */
 ```
 
 4. 逆波兰表达式求值
 
 ```go
-
+func evalRPN(tokens []string) int {
+    /*思路：用栈来处理，遇到数字压栈，遇到运算符出栈两次进行运算，
+    再压栈，最后返回栈中唯一的数字即可。需要注意的是遍历字符串数组时，
+    将字符串转为int用func Atoi(s string) (int, error){}。其中返回
+    两个参数，第一个是转化的数字，第二个是是否发生转化错误，若error为
+    nil，则说明转化成功，若不为nil，则转化失败
+    */
+    stack1 := Constructor()
+    for _,val := range tokens{
+        number,err := strconv.Atoi(val)
+        if err == nil{
+            stack1.push(number)
+        }else if val == "+"{
+            temp1 := stack1.pop()
+            temp2 := stack1.pop()
+            temp3 := temp2 + temp1
+            stack1.push(temp3)
+        }else if val == "-"{
+            temp1 := stack1.pop()
+            temp2 := stack1.pop()
+            temp3 := temp2 - temp1
+            stack1.push(temp3)
+        }else if val == "*"{
+            temp1 := stack1.pop()
+            temp2 := stack1.pop()
+            temp3 := temp2 * temp1
+            stack1.push(temp3)
+        }else if val == "/"{
+            temp1 := stack1.pop()
+            temp2 := stack1.pop()
+            temp3 := temp2 / temp1
+            stack1.push(temp3)
+        }
+    }
+    return stack1.pop()
+}
+type stack struct{
+    data []int
+}
+func Constructor() stack{
+    return stack{
+        data: []int{},
+    }
+}
+func (this *stack) pop() int{
+    top := this.data[len(this.data)-1]
+    this.data = this.data[:len(this.data)-1]
+    return top
+}
+func (this *stack) push(val int){
+    this.data = append(this.data,val)
+}
 ```
 
 5. 基本计算器
 
 ```go
-
+func calculate(s string) int {
+    /*思路：根据题意，只有加减运算，设置一个sign用于表示当前要计算数字是正是负，
+    用栈来处理括号。当扫描到数字时，由于有多位数的可能，因此对后面的位进行遍历，
+    遍历到不是数字时，将当前数字进行运算。若扫描到加减号，则改变sign，若扫描到'('，
+    则将当前的计算结果和符号压栈，当扫描到')'时，将当前的res与以前的res进行计算。
+    解释一下res的计算逻辑和压栈出栈的逻辑。如(4+5+2)，首先将0和1压栈，代表之前的
+    结果是0，符号为1，然后将res置0，sign置1，计算内层4+5+2，最后弹出之前的符号和
+    结果，进行运算。本来还可以先转后缀表达式再计算的，但是用range访问string再转化
+    为byte太麻烦了，就不写了，感觉以后访问string还得是用下标i，用range反而难写，
+    其次是还要注意byte转int时要用int(byte-'0')来转，不减'0'的话得到的数字是错的，
+    这是因为ASCILL码中'0'的ASCILL码为48。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    stack := []int{}
+    sign := 1
+    res := 0
+    num := 0
+    for i := 0;i < len(s);i++{
+        if s[i] >= '0' && s[i] <= '9'{
+            j := i
+            num = 0
+            for j < len(s) && s[j] >= '0' && s[j] <= '9'{
+                num = num*10 + int(s[j]-'0')
+                j++
+            }
+            res += sign*num
+            i = j - 1
+        }else if s[i] == '+'{
+            sign = 1
+        }else if s[i] == '-'{
+            sign = -1
+        }else if s[i] == '('{
+            stack = append(stack,res)
+            stack = append(stack,sign)
+            res = 0
+            sign = 1
+        }else if s[i] == ')'{
+            sign = stack[len(stack)-1]
+            prevRes := stack[len(stack)-2]
+            stack = stack[:len(stack)-2]
+            res = prevRes + sign*res
+        }
+    }
+    return res
+}
 ```
 
 ### 链表
@@ -1367,5 +1582,165 @@ func findMinArrowShots(points [][]int) int {
 
 ```
 
+7. 删除链表的倒数第N个结点
 
+```go
+
+```
+
+8. 删除排序链表中的重复元素II
+
+```go
+
+```
+
+9. 旋转链表
+
+```go
+
+```
+
+10. 分隔链表
+
+```go
+
+```
+
+11. LRU缓存
+
+```go
+
+```
+
+### 二叉树
+
+1. 二叉树的最大深度
+
+```go
+
+```
+
+2. 相同的树
+
+```go
+
+```
+
+3. 翻转二叉树
+
+```go
+
+```
+
+4. 对称二叉树
+
+```go
+
+```
+
+5. 从前序与中序遍历序列构造二叉树
+
+```go
+
+```
+
+6. 从中序与后序遍历序列构造二叉树
+
+```go
+
+```
+
+7. 填充每个节点的下一个右侧节点指针II
+
+```go
+
+```
+
+8. 二叉树展开为链表
+
+```go
+
+```
+
+9. 路径总和
+
+```go
+
+```
+
+10. 求根节点到叶节点数字之和
+
+```go
+
+```
+
+11. 二叉树中的最大路径和
+
+```go
+
+```
+
+12. 二叉搜索树迭代器
+
+```go
+
+```
+
+13. 完全二叉树的节点个数
+
+```go
+
+```
+
+14. 二叉树的最近公共祖先
+
+```go
+
+```
+
+### 二叉树层次遍历
+
+1. 二叉树的右视图
+
+```go
+
+```
+
+2. 二叉树的层平均值
+
+```go
+
+```
+
+3. 二叉树的层序遍历
+
+```go
+
+```
+
+4. 二叉树的锯齿形层序遍历
+
+```go
+
+```
+
+### 二叉搜索树
+
+1. 二叉搜索树的最小绝对差
+
+```go
+
+```
+
+2. 二叉搜索树中第K小的元素
+
+```go
+
+```
+
+3. 验证二叉搜索树
+
+```go
+
+```
 
