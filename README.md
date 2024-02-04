@@ -1099,25 +1099,202 @@ func max(x,y int)int{
 1. 汇总区间
 
 ```go
+func summaryRanges(nums []int) []string {
+    /*思路：
+    法一：建立一个哈希表，先遍历一遍nums，然后寻找
+    每个序列的开始元素，若找到开始元素，遍历这个序列，即可。
+    将int转为string可用strconv.Itoa(x int) string{}函数
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    法二：由于题目给的是一个无重复元素的有序数组，法一并没有
+    用到这个性质，可以定义双指针left和right，left记录区间起点，
+    而right记录区间终点，用right不断右移直到找到终点，添加进字符串
+    数组即可
+    时间复杂度：O(n)
+    空间复杂度：O(1)。如果不算输出的数组的话，而法一有哈希表必是O(n)
+    推荐法二，注释掉的是法一
+    */
+    arr := []string{}
+    length := len(nums)
+    left,right := 0,0
+    for right < length{
+        left = right
+        right++
+        for right < length && nums[right-1]+1 == nums[right]{
+            right++
+        }
+        if right-1 == left{
+            arr = append(arr,strconv.Itoa(nums[left]))
+        }else{
+            str := strconv.Itoa(nums[left]) + "->" + strconv.Itoa(nums[right-1])
+            arr = append(arr,str)
+        }
+    }
+    return arr
+    //法二
 
+
+    // m := map[int]bool{}
+    // for _,val := range nums{
+    //     m[val] = true
+    // }
+    // arr := []string{}
+    // for _,val := range nums{
+    //     if found := m[val-1];!found{
+    //         temp := val+1
+    //         ok := m[temp]
+    //         for ok{
+    //             temp++
+    //             ok = m[temp]
+    //         }
+    //         if temp-1 == val{
+    //             var str string = strconv.Itoa(val)
+    //             arr = append(arr,str)
+    //         }else{
+    //             var str string = strconv.Itoa(val) + "->" + strconv.Itoa((temp-1))
+    //             arr = append(arr,str)
+    //         }
+    //     }
+    // }
+    // return arr
+    // //法一
+}
 ```
 
 2. 合并区间
 
 ```go
-
+func merge(intervals [][]int) [][]int {
+    /*思路：这个问题的前置条件是知道如何将多维数组排序，使用这个接口，
+    sort.Slice(arr [][]int,func(i, j int) bool{})进行排序，
+    注意括号的位置，arr是待排序数组，func是制定的规则，如通过在{}
+    里书写return arr[i][0] < arr[j][0]，即可通过起始点进行排序，
+    排序方式为从小到大。这个函数采用快排，所以时间复杂度是O(nlogn)，
+    空间复杂度是O(logn)(不算返回数组的话)。
+    首先我们将该数组按起始点坐标进行排序，先加入该数组0号区间，作为
+    已经合并好的区间，然后对剩余区间的第一个进行判断，若该区间的左端点
+    大于已合并好的末尾区间的右端点，则说明它们不重合，直接把它加入数组中，
+    若小于等于，则说明可以进行合并，将已合并好的末尾区间的右端点改为
+    剩余区间的第一个的右端点和末尾区间的右端点的最大值。
+    */
+    if len(intervals) == 0{
+        return intervals
+    }
+    sort.Slice(intervals,func(i,j int)bool{
+        if intervals[i][0] < intervals[j][0]{
+            return true
+        }else{
+            return false
+        }
+    })
+    arr := [][]int{}
+    arr = append(arr,intervals[0])
+    lastIndex := 0
+    for i := 1;i < len(intervals);i++{
+        if intervals[i][0] <= arr[lastIndex][1]{
+            arr[lastIndex][1] = max(intervals[i][1],arr[lastIndex][1])
+        }else{
+            arr = append(arr,intervals[i])
+            lastIndex++
+        }
+    }
+    return arr
+}
+func max(x, y int)int{
+    if x > y{
+        return x
+    }else{
+        return y
+    }
+}
 ```
 
 3. 插入区间
 
 ```go
-
+func insert(intervals [][]int, newInterval []int) [][]int {
+    /*思路：一种思路是如上题，找到合适的地方插入区间，然后再进行合并，
+    但是像上题那样合并的话需要对intervals中的每个区间进行操作，而该题
+    给的是一个无重叠的有序区间，可以转换思路，分成三部分处理。
+    首先对于intervals中右端点小于新区间左端点的元素，说明其不重叠，
+    可以直接append进新的空数组，然后对于与新区间有重叠的元素，不管
+    是重叠了一部分，还是完全重叠，都可以进行合并，合并的方法是，直接对
+    新区间进行处理，将新区间的左端点改为它们中左端点的最小值，右端点改为
+    它们中右端点的最大值，对每一个重叠的元素都进行这个处理，即可完成合并。
+    对于intervals中左端点大于新区间右端点的元素，说明其不重叠，直接append
+    进新数组中即可。
+    时间复杂度：O(n)
+    空间复杂度：O(1)，如果算上返回数组的话是O(n)
+    */
+    arr := [][]int{}
+    i := 0
+    length := len(intervals)
+    for i < length && intervals[i][1] < newInterval[0]{
+        arr = append(arr,intervals[i])
+        i++
+    }
+    for i < length && intervals[i][0] <= newInterval[1]{
+        newInterval[0] = min(intervals[i][0],newInterval[0])
+        newInterval[1] = max(intervals[i][1],newInterval[1])
+        i++
+    }
+    arr = append(arr,newInterval)
+    for i < length && intervals[i][0] > newInterval[1]{
+        arr = append(arr,intervals[i])
+        i++
+    }
+    return arr
+}
+func max(x,y int) int{
+    if x > y{
+        return x
+    }else{
+        return y
+    }
+}
+func min(x,y int) int{
+    if x < y{
+        return x
+    }else{
+        return y
+    }
+}
 ```
 
 4. 用最少数量的箭引爆气球
 
 ```go
-
+func findMinArrowShots(points [][]int) int {
+    /*思路：
+    具体参考：https://leetcode.cn/problems/minimum-number-of-arrows-to-burst-balloons/?envType=study-plan-v2&envId=top-interview-150
+    首先得将数组按右端点升序排列，为什么不按左端点而是按右端点的原因是，
+    这样排序后，可以根据下一个区间的左端点和当前区间的右端点进行判断是否
+    重合，若重合则把他们归为一起不消耗箭，若不重合则需要多消耗一支箭。
+    首先将cnt设为1，然后对points进行遍历，若左端点大于当前的右端点，则
+    修改当前的右端点，并将箭的数量加一
+    时间复杂度：O(nlogn)
+    空间复杂度：O(logn)
+    */
+    if len(points) == 0{
+        return 0
+    }
+    sort.Slice(points,func(i,j int)bool{
+        if points[i][1] < points[j][1]{
+            return true
+        }else{
+            return false
+        }
+    })
+    cnt := 1
+    maxRight := points[0][1]
+    for _,val := range points{
+        if val[0] > maxRight{
+            maxRight = val[1]
+            cnt++
+        }
+    }
+    return cnt
+}
 ```
 
 ### 栈
