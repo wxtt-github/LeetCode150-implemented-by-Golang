@@ -1549,31 +1549,322 @@ func calculate(s string) int {
 1. 环形链表
 
 ```go
-
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func hasCycle(head *ListNode) bool {
+    /*思路：题目要求空间复杂度为O(1)，那就不能用map来记录了，可以用快慢
+    双指针来处理，循环条件是快指针不为nil和快指针不等于慢指针，快指针初始
+    置为1位置，慢指针初始置为0位置，快指针每次走两步，慢指针走一步。go里的指针
+    比较难用，如果quick==nil，这时候访问quick.nil会报错，因此要多加判断条件。
+    经测试，第一个if判断head==nil后就不会访问第二个条件，因此可以放一起不会报错，
+    但保险起见还是可以写成两个if来判断。
+    时间复杂度：O(n)
+    空间复杂度：O(1)
+    */
+    if head == nil || head.Next == nil{
+        return false
+    }
+    slow := head
+    quick := head.Next
+    for quick != nil && quick != slow{
+        slow = slow.Next
+        quick = quick.Next
+        if quick == nil{
+            break
+        }else{
+            quick = quick.Next
+        }
+    }
+    if quick == nil{
+        return false
+    }else{
+        return true
+    }
+}
 ```
 
 2. 两数相加
 
 ```go
-
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+    /*思路：设置一个进位ca用来记录同位相加的进位，方便下两位计算时使用，
+    当l1和l2不为nil时，新建结点，添加到l3后，修改进位，当跳出第一个for
+    循环时，l1和l2至少有一个为空，将其与进位计算，添加到l3后即可。
+    这里l3的定位是工作指针，head是头结点。需要注意在最后遍历完l1和l2后，
+    若ca有进位，还需要再新建一个结点加入。其实可以简化代码，把for循环的条件
+    改为l1!=nil || l2!=nil || ca!=0，可以把3个for循环和1个if合在一起，
+    但是这是代码优化的事情了，写代码时这个思路是最简单的。
+    时间复杂度：O(n)
+    空间复杂度：O(1)，如果算上返回值的话是O(n)
+    */
+    head := &ListNode{}
+    l3 := head
+    ca := 0
+    for l1 != nil && l2 != nil{
+        temp := &ListNode{
+            Val: (l1.Val+l2.Val+ca)%10,
+            Next: nil,
+        }
+        l3.Next = temp
+        l3 = l3.Next
+        if l1.Val + l2.Val + ca >= 10{
+            ca = 1
+        }else{
+            ca = 0
+        }
+        l1 = l1.Next
+        l2 = l2.Next
+    }
+    for l1 != nil{
+        temp := &ListNode{
+            Val: (l1.Val+ca)%10,
+            Next: nil,
+        }
+        l3.Next = temp
+        l3 = l3.Next
+        if l1.Val + ca >= 10{
+            ca = 1
+        }else{
+            ca = 0
+        }
+        l1 = l1.Next
+    }
+    for l2 != nil{
+        temp := &ListNode{
+            Val: (l2.Val+ca)%10,
+            Next: nil,
+        }
+        l3.Next = temp
+        l3 = l3.Next
+        if l2.Val + ca >= 10{
+            ca = 1
+        }else{
+            ca = 0
+        }
+        l2 = l2.Next
+    }
+    if ca == 1{
+        temp := &ListNode{
+            Val: ca,
+            Next: nil,
+        }
+        l3.Next = temp
+        l3 = l3.Next
+    }
+    return head.Next
+}
 ```
 
 3. 合并两个有序链表
 
 ```go
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
+    /*思路：逐个比较，新建结点，加入head后，即可，但是考虑到是有序链表，
+    且最大化节省空间的情况，可以做一些优化，不需要新建结点也可以，如法二
+    时间复杂度：O(m+n)
+    空间复杂度：O(1)，不算上返回空间的话
+    */
+    head := &ListNode{}
+    p := head
+    for list1 != nil && list2 != nil{
+        if list1.Val < list2.Val{
+            p.Next = list1
+            p = p.Next
+            list1 = list1.Next
+        }else{
+            p.Next = list2
+            p = p.Next
+            list2 = list2.Next
+        }
+    }
+    if list1 != nil{
+        p.Next = list1
+    }
+    if list2 != nil{
+        p.Next = list2
+    }
+    return head.Next
+    //法二
 
+
+    // head := &ListNode{}
+    // p := head
+    // for list1 != nil && list2 != nil{
+    //     temp := &ListNode{}
+    //     if list1.Val < list2.Val{
+    //         temp.Val = list1.Val
+    //         list1 = list1.Next
+    //     }else{
+    //         temp.Val = list2.Val
+    //         list2 = list2.Next
+    //     }
+    //     p.Next = temp
+    //     p = p.Next
+    // }
+    // for list1 != nil{
+    //     temp := &ListNode{
+    //         Val: list1.Val,
+    //     }
+    //     p.Next = temp
+    //     p = p.Next
+    //     list1 = list1.Next
+    // }
+    // for list2 != nil{
+    //     temp := &ListNode{
+    //         Val: list2.Val,
+    //     }
+    //     p.Next = temp
+    //     p = p.Next
+    //     list2 = list2.Next
+    // }
+    // return head.Next
+    // //法一
+}
 ```
 
 4. 随机链表的复制
 
 ```go
+/**
+ * Definition for a Node.
+ * type Node struct {
+ *     Val int
+ *     Next *Node
+ *     Random *Node
+ * }
+ */
 
+// var m map[*Node]*Node
+// //使用法一时取消注释
+func copyRandomList(head *Node) *Node {
+    /*思路：本题如果只是单纯的复制链表会很简单，难点在random指针，
+    因为在复制第一个的时候，random指的是随机的，这时候我们不一定
+    已经复制了那个随机的结点，同时我们也不能随意新建结点，因为我们
+    要保证这些结点建立起关系，为了解决这些问题，我们有两个解法。
+    法一：用哈希表+递归来处理。我们新建map[*Node]*Node，其中key代表
+    访问的head中的结点指针，而val是我们新建的结点指针，这样，若我们
+    第一次访问head中的结点，我们就新建一个结点，再把他存到哈希表中，
+    若之后的Next或者Random再次访问到时，我们可以访问哈希表找到我们当初
+    新建的结点。还要注意全局变量是实现方式，先在函数体外用var定义，
+    在函数体内赋值。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    法二：为了把空间复杂度变为O(1)，有一种巧妙的方法，在原链表的每个结点
+    后拷贝出这个结点，这样原链表的数量会*2，再遍历一遍链表，可以很方便地
+    拷贝Random（因为我们找到原链表结点的Random时，下一个就是它的拷贝），
+    这时候已经确定了新链表的Random关系，然后再遍历一遍，把两个链表分离即可。
+    时间复杂度：O(n)
+    空间复杂度：O(1)，不计算返回元素的话
+    推荐是法二，不过考虑返回其实差不多，法一也不错了
+    */
+    if head == nil{
+        return nil
+    }
+    for p := head;p != nil;p = p.Next.Next{
+        temp := &Node{
+            Val: p.Val,
+            Next: p.Next,
+        }
+        p.Next = temp
+    }
+    for p := head;p != nil;p = p.Next.Next{
+        if p.Random != nil{
+            p.Next.Random = p.Random.Next
+        }
+    }
+    copyHead := head.Next
+    for p := head;p != nil;p = p.Next{
+        newNode := p.Next
+        p.Next = p.Next.Next
+        if newNode.Next != nil{
+            newNode.Next = newNode.Next.Next
+        }
+    }
+    return copyHead
+    //法二
+
+    // m = map[*Node]*Node{}
+    // return deepCopy(head)
+    // //法一
+}
+
+// func deepCopy(node *Node) *Node{
+//     if node == nil{
+//         return nil
+//     }
+//     if _,found := m[node];found{
+//         return m[node]
+//     }
+//     temp := &Node{
+//         Val: node.Val,
+//     }
+//     m[node] = temp
+//     temp.Next = deepCopy(node.Next)
+//     temp.Random = deepCopy(node.Random)
+//     return temp
+// }
+// //使用法一时取消注释
 ```
 
 5. 反转链表II
 
 ```go
-
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+/*题解：https://leetcode.cn/problems/reverse-linked-list-ii/solutions/634701/fan-zhuan-lian-biao-ii-by-leetcode-solut-teyq/
+方法二
+*/
+func reverseBetween(head *ListNode, left int, right int) *ListNode {
+    /*思路：对于反转链表，如1->2->3->4->5，可以从1开始，之后的结点放到头，
+    如下一次是2->1->3->4->5，再下一次是3->2->1->4->5。
+    因此可以设置3种指针，一个前指针pre，一个当前指针cur，一个指向cur后的p指针。
+    设置一个哑结点dummy放在链表前，目的是处理特殊情况反转第一个结点时，可以将
+    pre指针设置在dummy结点上，方便操作。
+    首先先设置dummy结点，然后将pre指针移动到合适的位置，即放在待反转链表前，然后
+    将cur结点设置为pre后的第一个结点，p设为cur后的结点，然后不断把p的结点移到待
+    反转链表的最前面即可。
+    时间复杂度：O(n)
+    空间复杂度：O(1)
+    */
+    dummy := &ListNode{}
+    dummy.Next = head
+    pre := dummy
+    for i := 0;i < left-1;i++{
+        pre = pre.Next
+    }
+    cur := pre.Next
+    for i := 0;i < right-left;i++{
+        p := cur.Next
+        cur.Next = p.Next
+        p.Next = pre.Next
+        pre.Next = p
+    }
+    return dummy.Next
+}
 ```
 
 6. K个一组反转链表
@@ -1617,31 +1908,197 @@ func calculate(s string) int {
 1. 二叉树的最大深度
 
 ```go
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func maxDepth(root *TreeNode) int {
+    /*思路：
+    法一：深度优先递归遍历
+    一个结点的树高等于其左右两子树的树高的最大值加1。因此我们对nil结点返回0，
+    其他结点返回左右子树树高的最大值加1即可。
+    时间复杂度：O(n)
+    空间复杂度：O(height)
+    法二：广度优先遍历
+    首先处理特殊情况，空树返回0。
+    设置一个队列，用于存放树结点，队列首先加入根节点，接下来
+    若队列不为空，记录当前队列长度length，说明该层有length个结点，
+    然后把这些结点的左右结点都加入到队列中（如果有的话），每遍历一层，
+    高度height++
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    推荐用法一，代码少，空间复杂度低
+    */
+    if root == nil{
+        return 0
+    }else{
+        return max(maxDepth(root.Left),maxDepth(root.Right))+1
+    }
+    // 法一
 
+    // if root == nil{
+    //     return 0
+    // }
+    // queue := []*TreeNode{}
+    // queue = append(queue,root)
+    // height := 0
+    // for len(queue) > 0{
+    //     length := len(queue)
+    //     for length > 0{
+    //         node := queue[0]
+    //         queue = queue[1:]
+    //         if node.Left != nil{
+    //             queue = append(queue,node.Left)
+    //         }
+    //         if node.Right != nil{
+    //             queue = append(queue,node.Right)
+    //         }
+    //         length--
+    //     }
+    //     height++
+    // }
+    // return height
+    // // 法二
+}
+func max(x,y int)int{
+    if x > y{
+        return x
+    }else{
+        return y
+    }
+}
 ```
 
 2. 相同的树
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func isSameTree(p *TreeNode, q *TreeNode) bool {
+    /*思路：深度优先递归遍历
+    若结点均为空，返回true，若结点一个为空，返回false，
+    若结点值不同，返回false，递归访问左子树和右子树
+    时间复杂度：O(min(m,n))
+    空间复杂度：O(min(m,n))
+    */
+    if p == nil && q == nil{
+        return true
+    }
+    if p == nil || q == nil{
+        return false
+    }
+    if p.Val != q.Val{
+        return false
+    }
+    return isSameTree(p.Left,q.Left) && isSameTree(p.Right,q.Right)
+}
 ```
 
 3. 翻转二叉树
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func invertTree(root *TreeNode) *TreeNode {
+    /*思路：递归翻转
+    对于空节点的情况，直接返回nil，
+    将left设为invertTree(root.Left)，right设为invertTree(root.Right),
+    然后交换root的左右子树即可。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if root == nil{
+        return nil
+    }
+    left := invertTree(root.Left)
+    right := invertTree(root.Right)
+    root.Left = right
+    root.Right = left
+    return root
+}
 ```
 
 4. 对称二叉树
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func isSymmetric(root *TreeNode) bool {
+    /*思路：递归遍历，设置两个指针p和q，递归比较其左子树和右子树
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    return check(root,root)
+}
+func check(p *TreeNode,q *TreeNode)bool{
+    if p == nil && q == nil{
+        return true
+    }
+    if p == nil || q == nil{
+        return false
+    }
+    return p.Val == q.Val && check(p.Left,q.Right) && check(p.Right,q.Left)
+}
 ```
 
 5. 从前序与中序遍历序列构造二叉树
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func buildTree(preorder []int, inorder []int) *TreeNode {
+    /*思路：
+    递归地构造左子树和右子树，先寻找根的位置，然后对根的左子树和右子树进行递归构造。
+    难点在确定前序和中序的边界条件。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if len(preorder) == 0{
+        return nil
+    }
+    root := &TreeNode{
+        Val:preorder[0],
+        Left:nil,
+        Right:nil,
+    }
+    i := 0
+    for ;i < len(inorder);i++{
+        if inorder[i] == preorder[0]{
+            break
+        }
+    }
+    root.Left = buildTree(preorder[1:len(inorder[:i])+1],inorder[:i])
+    root.Right = buildTree(preorder[len(inorder[:i])+1:],inorder[i+1:])
+    return root
+}
 ```
 
 6. 从中序与后序遍历序列构造二叉树
