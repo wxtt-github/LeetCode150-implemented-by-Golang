@@ -2459,19 +2459,132 @@ func isValidBST(root *TreeNode) bool {
 1. 岛屿数量
 
 ```go
-
+func numIslands(grid [][]byte) int {
+    /*思路：采用深度遍历的方法，首先对每个方格进行遍历，
+    在处理每个方格时，如果这个方格为1，就将岛屿数量加1，
+    然后把它置为0，然后对它周围的四个方格进行深度遍历，
+    深度遍历的处理也是把它们置为0，这样一片岛屿我们只会
+    计算1次，达到我们算法的目的。
+    时间复杂度：O(mn)
+    空间复杂度：O(mn)，其中m为行数，n为列数
+    */
+    ans := 0
+    var dfs func(grid [][]byte,r int,c int)
+    dfs = func(grid [][]byte,r int,c int){
+        if r < 0 || r >= len(grid) || c < 0 || c >= len(grid[0]){
+            return
+        }
+        if grid[r][c] == '0'{
+            return
+        }
+        grid[r][c] = '0'
+        dfs(grid,r-1,c)
+        dfs(grid,r+1,c)
+        dfs(grid,r,c-1)
+        dfs(grid,r,c+1)
+    }
+    for i := 0;i < len(grid);i++{
+        for j := 0;j < len(grid[0]);j++{
+            if grid[i][j] == '1'{
+                ans++
+                dfs(grid,i,j)
+            }
+        }
+    }
+    return ans
+}
 ```
 
 2. 被围绕的区域
 
 ```go
-
+func solve(board [][]byte)  {
+    /*思路：根据题目描述，我们注意到，所有边界上的o都不会变成x，
+    而对于内部非边界的结点，能连到边界上o的o结点不会变成x，其他的
+    会变为x。因此我们可以对每一个边界的o结点进行深度优先遍历，把它们
+    相连的o结点进行标记，如标记为A，最后我们再将A统一恢复为o即可。
+    时间复杂度：O(mn)
+    空间复杂度：O(mn)
+    */
+    if len(board) == 0{
+        return
+    }
+    var dfs func(board [][]byte,r,c int)
+    dfs = func(board [][]byte,r,c int){
+        if r < 0 || r >= len(board) || c < 0 || c >= len(board[0]){
+            return
+        }
+        if board[r][c] != 'O'{
+            return 
+        }
+        board[r][c] = 'A'
+        dfs(board,r-1,c)
+        dfs(board,r+1,c)
+        dfs(board,r,c-1)
+        dfs(board,r,c+1)
+    }
+    for i := 0;i < len(board);i++{
+        dfs(board,i,0)
+        dfs(board,i,len(board[0])-1)
+    }
+    for i := 0;i < len(board[0]);i++{
+        dfs(board,0,i)
+        dfs(board,len(board)-1,i)
+    }
+    for i := 0;i < len(board);i++{
+        for j := 0;j < len(board[0]);j++{
+            if board[i][j] == 'A'{
+                board[i][j] = 'O'
+            }else if board[i][j] == 'O'{
+                board[i][j] = 'X'
+            }
+        }
+    }
+}
 ```
 
 3. 克隆图
 
 ```go
+/**
+ * Definition for a Node.
+ * type Node struct {
+ *     Val int
+ *     Neighbors []*Node
+ * }
+ */
 
+func cloneGraph(node *Node) *Node {
+    /*思路：深度优先搜索，用哈希表clone将拷贝的结点储存起来，如果是空结点，
+    直接返回，如果是已经拷贝过的结点，从哈希表中取出返回。如果是第一次
+    访问的结点，将其克隆存入哈希表，然后对其邻居进行更新，然后返回克隆结点。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if node == nil{
+        return nil
+    }
+    clone := map[*Node]*Node{}
+    var dfs func(node *Node)*Node
+    dfs = func(node *Node)*Node{
+        if node == nil{
+            return nil
+        }
+        if val,found := clone[node];found{
+            return val 
+        }
+        temp := &Node{
+            Val: node.Val,
+            Neighbors: []*Node{},
+        }
+        clone[node] = temp
+        for _,val := range node.Neighbors{
+            temp.Neighbors = append(temp.Neighbors,dfs(val))
+        }
+        return temp
+    }
+    return dfs(node)
+}
 ```
 
 4. 除法求值
