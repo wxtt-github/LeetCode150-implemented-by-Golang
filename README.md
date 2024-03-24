@@ -14,6 +14,13 @@
 - [二叉树](#二叉树)
 - [二叉树层次遍历](#二叉树层次遍历)
 - [二叉搜索树](#二叉搜索树)
+- [图](#图)
+- [图的广度优先搜索](#图的广度优先搜索)
+- [字典树](#字典树)
+- [回溯](#回溯)
+- [分治](#分治)
+- [Kadane算法](#Kadane算法)
+- [二分查找](#二分查找)
 
 ### 数组/字符串
 
@@ -2160,25 +2167,183 @@ func buildTree(preorder []int, inorder []int) *TreeNode {
 1. 二叉树的右视图
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func rightSideView(root *TreeNode) []int {
+    /*思路：采用BFS算法遍历结点，从右往左，输出每一层的最右边
+    的结点，需要注意的是添加进ans数组时，放在第二层for循环外面
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if root == nil{
+        return []int{}
+    }
+    ans := []int{}
+    queue := []*TreeNode{}
+    queue = append(queue,root)
+    for len(queue) > 0{
+        ans = append(ans,queue[0].Val)
+        length := len(queue)
+        for i := 0;i < length;i++{
+            head := queue[0]
+            if head.Right != nil{
+                queue = append(queue,head.Right)
+            }
+            if head.Left != nil{
+                queue = append(queue,head.Left)
+            }
+            queue = queue[1:]
+        }
+    }
+    return ans
+}
 ```
 
 2. 二叉树的层平均值
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func averageOfLevels(root *TreeNode) []float64 {
+    /*思路：层次遍历，需要注意的是，可以拷贝目前队列，构建下一层时，
+    把下一层队列置空，把上一层的孩子结点加进下一层队列中，最后计算即可。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if root == nil{
+        return []float64{}
+    }
+    ans := []float64{}
+    queue := []*TreeNode{}
+    queue = append(queue,root)
+    for len(queue) > 0{
+        curLevel := queue
+        queue = nil
+        sum := 0
+        for _,node := range curLevel{
+            sum += node.Val
+            if node.Left != nil{
+                queue = append(queue,node.Left)
+            }
+            if node.Right != nil{
+                queue = append(queue,node.Right)
+            }
+        }
+        ans = append(ans,float64(sum)/float64(len(curLevel)))
+    }
+    return ans
+}
 ```
 
 3. 二叉树的层序遍历
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func levelOrder(root *TreeNode) [][]int {
+    /*思路：简单的层序遍历即可。
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if root == nil{
+        return [][]int{}
+    }
+    ans := [][]int{}
+    queue := []*TreeNode{}
+    queue = append(queue,root)
+    for len(queue) > 0{
+        curLevel := queue
+        queue = nil
+        temp := []int{}
+        for _,node := range curLevel{
+            temp = append(temp,node.Val)
+            if node.Left != nil{
+                queue = append(queue,node.Left)
+            }
+            if node.Right != nil{
+                queue = append(queue,node.Right)
+            }
+        }
+        ans = append(ans,temp)
+    }
+    return ans
+}
 ```
 
 4. 二叉树的锯齿形层序遍历
 
 ```go
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func zigzagLevelOrder(root *TreeNode) [][]int {
+    /*思路：层次遍历的变种，只需要在每次加入每层结点temp时，判断方向即可，
+    如果是从左往右就正常添加，如果是从右往左，就把temp进行反转，再添加
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    if root == nil{
+        return [][]int{}
+    }
+    ans := [][]int{}
+    // 1代表从左到右，-1代表从右到左
+    direction := 1
+    queue := []*TreeNode{}
+    queue = append(queue,root)
+    for len(queue) > 0{
+        curLevel := queue
+        queue = nil
+        temp := []int{}
+        for _,node := range curLevel{
+            temp = append(temp,node.Val)
+            if node.Left != nil{
+                queue = append(queue,node.Left)
+            }
+            if node.Right != nil{
+                queue = append(queue,node.Right)
+            }
+        }
+        if direction == 1{
+            direction = -1
+        }else{
+            direction = 1
+            reverse(temp)
+        }
+        ans = append(ans,temp)
+    }
+    return ans
+}
 
+func reverse(arr []int) []int{
+    for i,j := 0,len(arr)-1;i < j;i,j = i+1,j-1{
+        // 值得注意的是，这里控制i+1和j-1时，不能用i++,j--，go不支持这样写
+        arr[i],arr[j] = arr[j],arr[i]
+    }
+    return arr
+}
 ```
 
 ### 二叉搜索树
@@ -2186,16 +2351,310 @@ func buildTree(preorder []int, inorder []int) *TreeNode {
 1. 二叉搜索树的最小绝对差
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func getMinimumDifference(root *TreeNode) int {
+    /*思路：首先对于二叉搜索树，进行中序遍历能得到一个递增序列，
+    而对于一个递增序列来说，只有相邻两结点的差值才有可能得到最小
+    */
+    ans := math.MaxInt64
+    pre := -1
+    var dfs func(*TreeNode)
+    dfs = func(node *TreeNode){
+        if node == nil{
+            return
+        }
+        dfs(node.Left)
+        if pre != -1 && node.Val-pre < ans{
+            ans = node.Val-pre
+        }
+        pre = node.Val
+        dfs(node.Right)
+    }
+    dfs(root)
+    return ans
+}
 ```
 
 2. 二叉搜索树中第K小的元素
 
 ```go
-
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func kthSmallest(root *TreeNode, k int) int {
+    /*思路：按照中序遍历，寻找第k个元素
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    ans := -1
+    cnt := 1
+    var dfs func(node *TreeNode)
+    dfs = func(node *TreeNode){
+        if node == nil{
+            return
+        }
+        dfs(node.Left)
+        if cnt == k{
+            ans = node.Val
+        }
+        cnt++
+        dfs(node.Right)
+    }
+    dfs(root)
+    return ans
+}
 ```
 
 3. 验证二叉搜索树
+
+```go
+/**
+ * Definition for a binary tree node.
+ * type TreeNode struct {
+ *     Val int
+ *     Left *TreeNode
+ *     Right *TreeNode
+ * }
+ */
+func isValidBST(root *TreeNode) bool {
+    /*思路：中序遍历，设一个pre用于记录之前的结点，
+    若不满足升序排列则返回false，需要注意的是左子树必须
+    严格小于根，根严格小于右子树，等于的情况也为false
+    时间复杂度：O(n)
+    空间复杂度：O(n)
+    */
+    pre := math.MinInt64
+    ans := true
+    var dfs func(node *TreeNode)
+    dfs = func(node *TreeNode){
+        if node == nil{
+            return
+        }
+        dfs(node.Left)
+        if node.Val <= pre{
+            ans = false
+        }
+        pre = node.Val
+        dfs(node.Right)
+    }
+    dfs(root)
+    return ans
+}
+```
+
+### 图
+
+1. 岛屿数量
+
+```go
+
+```
+
+2. 被围绕的区域
+
+```go
+
+```
+
+3. 克隆图
+
+```go
+
+```
+
+4. 除法求值
+
+```go
+
+```
+
+5. 课程表
+
+```go
+
+```
+
+6. 课程表II
+
+```go
+
+```
+
+### 图的广度优先搜索
+
+1. 蛇梯棋
+
+```go
+
+```
+
+2. 最小基因变化
+
+```go
+
+```
+
+3. 单词接龙
+
+```go
+
+```
+
+### 字典树
+
+1. 实现Trie（前缀树）
+
+```go
+
+```
+
+2. 添加与搜索单词-数据结构设计
+
+```go
+
+```
+
+3. 单词搜索II
+
+```go
+
+```
+
+### 回溯
+
+1. 电话号码的字母组合
+
+```go
+
+```
+
+2. 组合
+
+```go
+
+```
+
+3. 全排列
+
+```go
+
+```
+
+4. 组合总和
+
+```go
+
+```
+
+5. N皇后II
+
+```go
+
+```
+
+6. 括号生成
+
+```go
+
+```
+
+7. 单词搜索
+
+```go
+
+```
+
+### 分治
+
+1. 将有序数组转换为二叉搜索树
+
+```go
+
+```
+
+2. 排序链表
+
+```go
+
+```
+
+3. 建立四叉树
+
+```go
+
+```
+
+4. 合并K个升序链表
+
+```go
+
+```
+
+### Kadane算法
+
+1. 最大子数组和
+
+```go
+
+```
+
+2. 环形子数组的最大和
+
+```go
+
+```
+
+### 二分查找
+
+1.搜索插入位置
+
+```go
+
+```
+
+2.搜索二维矩阵
+
+```go
+
+```
+
+3.寻找峰值
+
+```go
+
+```
+
+4.搜索旋转排序数组
+
+```go
+
+```
+
+5.在排序数组中查找元素的第一个和最后一个位置
+
+```go
+
+```
+
+6.寻找旋转排序数组中的最小值
+
+```go
+
+```
+
+7.寻找两个正序数组中的中位数
 
 ```go
 
